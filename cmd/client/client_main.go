@@ -25,12 +25,9 @@ func main() {
 
 	root.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "")
 	root.PersistentFlags().String("function-name", "efsu", "")
-	root.PersistentFlags().String("access-point-arn", "", "")
-	root.PersistentFlags().String("subnet-id", "", "")
-	root.PersistentFlags().String("security-group-id", "", "")
-	root.PersistentFlags().String("profile", "", "")
-	root.PersistentFlags().String("region", "", "")
-	root.PersistentFlags().Bool("yolo", false, "")
+	root.PersistentFlags().String("profile", "", "Name of a profile in ~/.aws/config to use")
+	root.PersistentFlags().String("region", "", "AWS region to operate in")
+	root.PersistentFlags().Bool("yolo", false, "Force operation even if Lambda and local version do not match")
 	viper.BindPFlags(root.PersistentFlags())
 
 	setup := &cobra.Command{
@@ -46,7 +43,10 @@ func main() {
 		},
 	}
 
-	setup.PersistentFlags().String("bucket-name", "", "")
+	setup.PersistentFlags().String("bucket-name", "", "Bucket to store Lambda zip in - defaults to efsu-${AWS::Region}-${AWS::AccountId}")
+	setup.PersistentFlags().String("access-point-arn", "", "ARN of an EFS access point to associate with the Lambda")
+	setup.PersistentFlags().String("subnet-id", "", "Subnet to deploy function into")
+	setup.PersistentFlags().String("security-group-id", "", "Security group to associate with function")
 	viper.BindPFlags(setup.PersistentFlags())
 
 	ls := &cobra.Command{
