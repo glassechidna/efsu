@@ -1,0 +1,32 @@
+name: CI
+on:
+  push:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16.x
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: go-${{ hashFiles('**/go.sum') }}
+
+      - name: goreleaser
+        uses: goreleaser/goreleaser-action@v1
+        with:
+          version: v0.170.0
+          args: --snapshot --skip-publish --rm-dist
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: built
+          path: dist
+          retention-days: 1

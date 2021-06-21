@@ -1,0 +1,73 @@
+project_name: efsu
+before:
+  hooks:
+    - >-
+      sh -c '
+      CGO_ENABLED=0
+      GOOS=linux
+      GOARCH=amd64
+      go build -ldflags="-s -w -buildid= -X main.version={{.Version}}"
+      -trimpath
+      -o bootstrap
+      ./cmd/lambda
+      '
+    - zip cmd/client/lambda.zip bootstrap
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    main: ./cmd/client
+    binary: efsu
+    goarch:
+      - amd64
+      - arm64
+dockers:
+  - image_templates:
+      - ghcr.io/glassechidna/efsu:latest
+      - ghcr.io/glassechidna/efsu:{{ .Tag }}
+      - ghcr.io/glassechidna/efsu:{{ .Major }}
+      - ghcr.io/glassechidna/efsu:{{ .Major }}.{{ .Minor }}
+    build_flag_templates:
+      - --label=org.opencontainers.image.created={{.Date}}
+      - --label=org.opencontainers.image.title={{.ProjectName}}
+      - --label=org.opencontainers.image.revision={{.FullCommit}}
+      - --label=org.opencontainers.image.version={{.Version}}
+      - --label=org.opencontainers.image.source={{.GitURL}}
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+nfpms:
+  - vendor: efsu
+    homepage: https://github.com/glassechidna/efsu
+    maintainer: Aidan Steele <aidan.steele@glassechidna.com.au>
+    description: efsu is for accessing AWS EFS from your machine without a VPN
+    formats: [deb]
+brews:
+  - tap:
+      owner: glassechidna
+      name: homebrew-taps
+    commit_author:
+      name: Aidan Steele
+      email: aidan.steele@glassechidna.com.au
+    homepage: https://github.com/glassechidna/efsu
+    description: efsu is for accessing AWS EFS from your machine without a VPN
+scoop:
+  bucket:
+    owner: glassechidna
+    name: scoop-bucket
+  commit_author:
+    name: Aidan Steele
+    email: aidan.steele@glassechidna.com.au
+  homepage: https://github.com/glassechidna/efsu
+  description: efsu is for accessing AWS EFS from your machine without a VPN
+  license: MIT

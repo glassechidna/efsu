@@ -1,0 +1,50 @@
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  FunctionName:
+    Type: String
+  Bucket:
+    Type: String
+  Key:
+    Type: String
+  VersionId:
+    Type: String
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+  SecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+  EfsAccessPointArn:
+    Type: String
+
+Resources:
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      Runtime: provided
+      Handler: bootstrap
+      AutoPublishAlias: live
+      MemorySize: 512
+      CodeUri:
+        Bucket: !Ref Bucket
+        Key: !Ref Key
+        Version: !Ref VersionId
+      Timeout: 60
+      VpcConfig:
+        SecurityGroupIds: [!Ref SecurityGroupId]
+        SubnetIds: [!Ref SubnetId]
+      FileSystemConfigs:
+        - Arn: !Ref EfsAccessPointArn
+          LocalMountPath: /mnt/efs
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - elasticfilesystem:ClientMount
+                - elasticfilesystem:ClientWrite
+              Resource: "*"
+              Condition:
+                StringEquals:
+                  elasticfilesystem:AccessPointArn: !Ref EfsAccessPointArn
+Outputs:
+  FunctionVersion:
+    Value: !Ref Function.Version

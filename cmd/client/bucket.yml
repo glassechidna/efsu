@@ -1,0 +1,21 @@
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  BucketName:
+    Type: String
+    Default: ""
+Conditions:
+  HasBucketName: !Not [ !Equals [ !Ref BucketName, "" ] ]
+Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !If
+        - HasBucketName
+        - !Ref BucketName
+        - !Sub efsu-${AWS::Region}-${AWS::AccountId}
+      VersioningConfiguration:
+        Status: Enabled
+Outputs:
+  Bucket:
+    Value: !Ref Bucket
