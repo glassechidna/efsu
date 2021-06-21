@@ -183,7 +183,7 @@ func printEventsSince(ctx context.Context, cfn cloudformationiface.CloudFormatio
 		ts := *event.Timestamp
 		eventsSince = ts
 
-		date := ts.Format("[15:04:05]")
+		date := ts.Local().Format("[15:04:05]")
 		status := *event.ResourceStatus
 		if event.ResourceStatusReason != nil {
 			status += " " + *event.ResourceStatusReason
