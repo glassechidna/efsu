@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"os"
+	"fmt"
 )
 
 func handleDownload(ctx context.Context, input *efsu.Input) (*efsu.Output, error) {
