@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"os"
+	"fmt"
 )
 
 func handleDownload(ctx context.Context, input *efsu.Input) (*efsu.Output, error) {
@@ -26,7 +27,7 @@ func handleDownload(ctx context.Context, input *efsu.Input) (*efsu.Output, error
 		fRange.Size = info.Size()
 	}
 
-	var limit int64 = 5e6
+	var limit int64 = 4e6
 	if fRange.Size > limit {
 		fRange.Size = limit
 	}
@@ -45,6 +46,8 @@ func handleDownload(ctx context.Context, input *efsu.Input) (*efsu.Output, error
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
+	
+	fmt.Printf("cp fileSize=%d offset=%d rangeLen=%d read=%d\n", info.Size(), fRange.Offset, fRange.Size, copied)
 
 	if copied != fRange.Size {
 		return nil, errors.New("too little data read")
