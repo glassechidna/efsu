@@ -26,7 +26,7 @@ func handleDownload(ctx context.Context, input *efsu.Input) (*efsu.Output, error
 		fRange.Size = info.Size()
 	}
 
-	var limit int64 = 5e6
+	var limit int64 = 4e6
 	if fRange.Size > limit {
 		fRange.Size = limit
 	}
