@@ -42,18 +42,14 @@ type ListItem struct {
 	ModTime time.Time
 }
 
-type ContentRange struct {
-	Offset int64
-	Size   int64
-}
-
 type DownloadInput struct {
-	Path  string
-	Range ContentRange
+	Path   string
+	Offset int64
 }
 
 type DownloadOutput struct {
-	FileSize int64
-	Mode     fs.FileMode
-	Content  []byte
+	FileSize   int64
+	Mode       fs.FileMode
+	Content    []byte
+	NextOffset int64
 }

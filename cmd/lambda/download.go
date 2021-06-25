@@ -3,11 +3,12 @@ package main
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/glassechidna/efsu"
+	"github.com/klauspost/compress/zstd"
 	"github.com/pkg/errors"
 	"io"
 	"os"
-	"fmt"
 )
 
 func handleDownload(ctx context.Context, input *efsu.Input) (*efsu.Output, error) {
@@ -22,43 +23,45 @@ func handleDownload(ctx context.Context, input *efsu.Input) (*efsu.Output, error
 		return nil, errors.WithStack(err)
 	}
 
-	fRange := input.Download.Range
-	if fRange.Size == 0 {
-		fRange.Size = info.Size()
-	}
-
-	var limit int64 = 4e6
-	if fRange.Size > limit {
-		fRange.Size = limit
-	}
-
-	_, err = f.Seek(fRange.Offset, io.SeekStart)
+	_, err = f.Seek(input.Download.Offset, io.SeekStart)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	if fRange.Offset+fRange.Size > info.Size() {
-		fRange.Size = info.Size() - fRange.Offset
-	}
-
+	var limit int = 4e6
 	buf := &bytes.Buffer{}
-	copied, err := io.CopyN(buf, f, fRange.Size)
+	zw, err := zstd.NewWriter(buf)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	
-	fmt.Printf("cp fileSize=%d offset=%d rangeLen=%d read=%d\n", info.Size(), fRange.Offset, fRange.Size, copied)
 
-	if copied != fRange.Size {
-		return nil, errors.New("too little data read")
+	var rawRead int64 = 0
+	for buf.Len() < limit {
+		copied, err := io.CopyN(zw, f, 1e6)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, errors.WithStack(err)
+		}
+
+		rawRead += copied
 	}
+
+	err = zw.Close()
+	if err != nil {
+	    return nil, errors.WithStack(err)
+	}
+
+	fmt.Printf("cp fileSize=%d buflen=%d read=%d\n", info.Size(), buf.Len(), rawRead)
 
 	return &efsu.Output{
 		Version: version,
 		Download: &efsu.DownloadOutput{
-			FileSize: info.Size(),
-			Mode:     info.Mode(),
-			Content:  buf.Bytes(),
+			FileSize:   info.Size(),
+			Mode:       info.Mode(),
+			Content:    buf.Bytes(),
+			NextOffset: rawRead + input.Download.Offset,
 		},
 	}, nil
 }
